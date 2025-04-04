@@ -37,6 +37,8 @@
     <DsComOverideLibraryName></DsComOverideLibraryName>
     <!-- Do not embed type library after build -->
     <DsComTypeLibraryEmbedAfterBuild>false</DsComTypeLibraryEmbedAfterBuild>
+    <!-- Do not retry to embed on failure -->
+    <DsComEmbedAttemptCount>1</DsComEmbedAttemptCount>
   </PropertyGroup>
 
   <!-- Clear properties -->

@@ -72,13 +72,14 @@ public static class TypeLibEmbedder
             throw new ApplicationException("The index must be set to a number between 1 to 65535.");
         }
 
-        int win32ErrorCode;
-
-        var assemblyFileHandle = BeginUpdateResourceW(settings.TargetAssembly, false);
-        win32ErrorCode = Marshal.GetLastWin32Error();
-        if (assemblyFileHandle == IntPtr.Zero)
+        if (settings.RetryCount <= 0)
         {
-            throw new ApplicationException($"Unable to lock the assembly file {settings.TargetAssembly} for resource updating; error code {win32ErrorCode}.");
+            throw new ApplicationException("The retry count must be set to a number greater than 0.");
+        }
+
+        if (settings.RetryDelay <= 0)
+        {
+            throw new ApplicationException("The retry delay must be set to a number greater than 0.");
         }
 
         var strPtr = IntPtr.Zero;
@@ -86,10 +87,29 @@ public static class TypeLibEmbedder
         {
             strPtr = Marshal.StringToHGlobalUni("TYPELIB");
             var bytes = File.ReadAllBytes(settings.SourceTypeLibrary);
-            if (!UpdateResourceW(assemblyFileHandle, strPtr, new IntPtr(settings.Index), 0, bytes, bytes.Length))
+
+            for (var attempt = 0; attempt < settings.RetryCount; attempt++)
             {
-                win32ErrorCode = Marshal.GetLastWin32Error();
-                throw new ApplicationException($"Error: Unable to update assembly file '{settings.TargetAssembly}' using TLB file '{settings.SourceTypeLibrary}'; error code {win32ErrorCode}.");
+                var assemblyFileHandle = BeginUpdateResourceW(settings.TargetAssembly, false);
+                if (assemblyFileHandle == IntPtr.Zero)
+                {
+                    HandleRetryOrThrow(attempt, settings.RetryCount, settings.RetryDelay, $"Unable to lock the assembly file {settings.TargetAssembly} for resource updating");
+                    continue;
+                }
+
+                if (!UpdateResourceW(assemblyFileHandle, strPtr, new IntPtr(settings.Index), 0, bytes, bytes.Length))
+                {
+                    HandleRetryOrThrow(attempt, settings.RetryCount, settings.RetryDelay, $"Error: Unable to update assembly file '{settings.TargetAssembly}' using TLB file '{settings.SourceTypeLibrary}'");
+                    continue;
+                }
+
+                if (!EndUpdateResourceW(assemblyFileHandle, false))
+                {
+                    HandleRetryOrThrow(attempt, settings.RetryCount, settings.RetryDelay, $"Error: Unable to write changes to assembly file '{settings.TargetAssembly}' using TLB file '{settings.SourceTypeLibrary}'");
+                    continue;
+                }
+
+                return true;
             }
         }
         finally
@@ -100,12 +120,18 @@ public static class TypeLibEmbedder
             }
         }
 
-        if (!EndUpdateResourceW(assemblyFileHandle, false))
+        return false;
+    }
+    private static void HandleRetryOrThrow(int attempt, int retryCount, int retryDelay, string errorMessage)
+    {
+        if (attempt < retryCount - 1)
         {
-            win32ErrorCode = Marshal.GetLastWin32Error();
-            throw new ApplicationException($"Error: Unable to write changes to assembly file '{settings.TargetAssembly}' using TLB file '{settings.SourceTypeLibrary}'; error code {win32ErrorCode}.");
-        };
-
-        return true;
+            Thread.Sleep(retryDelay);
+        }
+        else
+        {
+            var win32ErrorCode = Marshal.GetLastWin32Error();
+            throw new ApplicationException($"{errorMessage}; error code {win32ErrorCode}.");
+        }
     }
 }
