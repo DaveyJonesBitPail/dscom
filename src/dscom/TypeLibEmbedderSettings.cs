@@ -33,4 +33,14 @@ public class TypeLibEmbedderSettings
     /// Gets or sets the resource index. Defaults to 1.
     /// </summary>
     public ushort Index { get; set; } = 1;
+
+    /// <summary>
+    /// Gets or sets the retry count, Defaults to 1;
+    /// </summary>
+    public int RetryCount { get; set; } = 10;
+
+    /// <summary>
+    /// Gets or sets the retry delay in milliseconds. Defaults to 1000.
+    /// </summary>
+    public int RetryDelay { get; set; } = 1000;
 }
