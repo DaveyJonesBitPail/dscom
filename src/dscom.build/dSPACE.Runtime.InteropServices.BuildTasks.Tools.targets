@@ -96,7 +96,7 @@
       <_DsComArguments> $(_DsComArguments) "$(_DsComExportTypeLibraryAssemblyFile)"</_DsComArguments>
       <_DsComWorkingDir>$(OutDir)</_DsComWorkingDir> 
       <_DsComWorkingDir Condition="$(_DsComWorkingDir) == ''">$(OutputPath)</_DsComWorkingDir>
-      <_DsComArguments Condition="$(DsComEmbedRetryCount) != ''">$(_DsComArguments) --retrycount $(DsComEmbedRetryCount)</_DsComArguments>
+      <_DsComArguments Condition="$(DsComEmbedAttemptCount) != ''">$(_DsComArguments) --retrycount $(DsComEmbedAttemptCount)</_DsComArguments>
       <_DsComArguments Condition="$(DsComEmbedRetryDelay) != ''">$(_DsComArguments) --retrydelay $(DsComEmbedRetryDelay)</_DsComArguments>
     </PropertyGroup>
     
