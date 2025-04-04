@@ -41,7 +41,9 @@ public static class ConsoleApp
             new Option<Guid>(new[] {"--overridetlbid", "/overridetlbid"}, description: "Overwrites the library id"),
             new Option<bool?>(new[] {"--createmissingdependenttlbs", "/createmissingdependenttlbs"}, description: "Generate missing type libraries for referenced assemblies. (default true)"),
             new Option<string?>(new[] { "--embed", "/embed"}, () => TypeLibConverterOptions.NotSpecifiedViaCommandLineArgumentsDefault, description: "Embeds type library into the assembly. (default: false)") { Arity = ArgumentArity.ZeroOrOne },
-            new Option<ushort>(new[] {"--index", "/index"}, () => 1, description: "If the switch --embed is specified, the index indicates the resource ID to be used for the embedded type library. Must be a number between 1 and 65535. Ignored if --embed not present. (default 1)")
+            new Option<ushort>(new[] {"--index", "/index"}, () => 1, description: "If the switch --embed is specified, the index indicates the resource ID to be used for the embedded type library. Must be a number between 1 and 65535. Ignored if --embed not present. (default 1)"),
+            new Option<int>(new[] {"--retrycount", "/retrycount"}, () => 10, description:"Retry count if embedding fails. If omitted, defaults to 1. Must be a positive integer."),
+            new Option<int>(new[] {"--retrydelay", "/retrydelay"}, () => 1000, description:"Delay in milliseconds between retries if retry count is greater than 1. If omitted, defaults to 1000ms. Must be a positive integer.")
         };
 
         var tlbdumpCommand = new Command("tlbdump", "Dump a type library")
@@ -69,7 +71,9 @@ public static class ConsoleApp
         {
             new Argument<string>("SourceTypeLibrary","File name of type library"),
             new Argument<string>("TargetAssembly", "File name of target assembly to receive the type library as a resource"),
-            new Option<ushort>(new[] {"--index", "/index"}, () => 1, description:"Index to use for resource ID for the type library. If omitted, defaults to 1. Must be a positive integer from 1 to 65535.")
+            new Option<ushort>(new[] {"--index", "/index"}, () => 1, description:"Index to use for resource ID for the type library. If omitted, defaults to 1. Must be a positive integer from 1 to 65535."),
+            new Option<int>(new[] {"--retrycount", "/retrycount"}, () => 10, description:"Retry count if embedding fails. If omitted, defaults to 1. Must be a positive integer."),
+            new Option<int>(new[] {"--retrydelay", "/retrydelay"}, () => 1000, description:"Delay in milliseconds between retries if retry count is greater than 1. If omitted, defaults to 1000ms. Must be a positive integer.")
         };
 
         var registerAssemblyCommand = new Command("regasm", "Register an assembly")
@@ -402,7 +406,9 @@ public static class ConsoleApp
         {
             SourceTypeLibrary = options.Out,
             TargetAssembly = assemblyPath,
-            Index = options.Index
+            Index = options.Index,
+            RetryCount = options.RetryCount,
+            RetryDelay = options.RetryDelay
         };
         TypeLibEmbedder.EmbedTypeLib(settings);
     }
