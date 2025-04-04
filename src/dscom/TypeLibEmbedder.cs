@@ -67,69 +67,100 @@ public static class TypeLibEmbedder
     /// <exception cref="ApplicationException">Reports an issue with applying changes to the resources.</exception>
     public static bool EmbedTypeLib(TypeLibEmbedderSettings settings)
     {
+        if (settings.Index < 1)
+        {
+            throw new ApplicationException("The index must be set to a number between 1 to 65535.");
+        }
+
+        int win32ErrorCode = 0;
+
         const int maxRetries = 3;
         const int delayMilliseconds = 1000;
+        bool updateSuccess = false;
+        bool beginUpdateSuccess = false;
+        bool endUpdateSuccess = false;
 
         for (int attempt = 0; attempt < maxRetries; attempt++)
         {
-            try
+            updateSuccess = false;
+            beginUpdateSuccess = false;
+            endUpdateSuccess = false;
+
+            var assemblyFileHandle = BeginUpdateResourceW(settings.TargetAssembly, false);
+            win32ErrorCode = Marshal.GetLastWin32Error();
+            if (assemblyFileHandle == IntPtr.Zero)
             {
-                if (settings.Index < 1)
-                {
-                    throw new ApplicationException("The index must be set to a number between 1 to 65535.");
-                }
-
-                int win32ErrorCode;
-
-                var assemblyFileHandle = BeginUpdateResourceW(settings.TargetAssembly, false);
-                win32ErrorCode = Marshal.GetLastWin32Error();
-                if (assemblyFileHandle == IntPtr.Zero)
-                {
-                    throw new ApplicationException($"Unable to lock the assembly file {settings.TargetAssembly} for resource updating; error code {win32ErrorCode}.");
-                }
-
-                var strPtr = IntPtr.Zero;
-                try
-                {
-                    strPtr = Marshal.StringToHGlobalUni("TYPELIB");
-                    var bytes = File.ReadAllBytes(settings.SourceTypeLibrary);
-
-                    if (!UpdateResourceW(assemblyFileHandle, strPtr, new IntPtr(settings.Index), 0, bytes, bytes.Length))
-                    {
-                        win32ErrorCode = Marshal.GetLastWin32Error();
-                        throw new ApplicationException($"Error: Unable to update assembly file '{settings.TargetAssembly}' using TLB file '{settings.SourceTypeLibrary}'; error code {win32ErrorCode}.");
-                    }
-                }
-                finally
-                {
-                    if (strPtr != IntPtr.Zero)
-                    {
-                        Marshal.FreeHGlobal(strPtr);
-                    }
-                }
-
-                if (!EndUpdateResourceW(assemblyFileHandle, false))
-                {
-                    win32ErrorCode = Marshal.GetLastWin32Error();
-                    throw new ApplicationException($"Error: Unable to write changes to assembly file '{settings.TargetAssembly}' using TLB file '{settings.SourceTypeLibrary}'; error code {win32ErrorCode}.");
-                }
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Attempt {attempt + 1} failed: {ex.Message}");
                 if (attempt < maxRetries - 1)
                 {
                     Thread.Sleep(delayMilliseconds);
+                    continue;
+                }
+            }
+            else
+            {
+                beginUpdateSuccess = true;
+            }
+
+            var strPtr = IntPtr.Zero;
+            try
+            {
+                strPtr = Marshal.StringToHGlobalUni("TYPELIB");
+                var bytes = File.ReadAllBytes(settings.SourceTypeLibrary);
+                if (!UpdateResourceW(assemblyFileHandle, strPtr, new IntPtr(settings.Index), 0, bytes, bytes.Length))
+                {
+                    if (attempt < maxRetries - 1)
+                    {
+                        Thread.Sleep(delayMilliseconds);
+                        continue;
+                    }
                 }
                 else
                 {
-                    throw;
+                    updateSuccess = true;
                 }
             }
+            finally
+            {
+                if (strPtr != IntPtr.Zero)
+                {
+                    Marshal.FreeHGlobal(strPtr);
+                }
+            }
+
+
+            if (!EndUpdateResourceW(assemblyFileHandle, false))
+            {
+                if (attempt < maxRetries - 1)
+                {
+                    Thread.Sleep(delayMilliseconds);
+                    continue;
+                }
+            }
+            else
+            {
+                endUpdateSuccess = true;
+            }
+            if (beginUpdateSuccess && updateSuccess && endUpdateSuccess)
+            {
+                break;
+            }
+        }
+        if (!beginUpdateSuccess)
+        {
+            throw new ApplicationException($"Unable to lock the assembly file {settings.TargetAssembly} for resource updating; error code {win32ErrorCode}.");
+        }
+        if (!updateSuccess)
+        {
+            win32ErrorCode = Marshal.GetLastWin32Error();
+            throw new ApplicationException($"Error: Unable to update assembly file '{settings.TargetAssembly}' using TLB file '{settings.SourceTypeLibrary}'; error code {win32ErrorCode}.");
         }
 
-        return false;
+        if (!endUpdateSuccess)
+        {
+            win32ErrorCode = Marshal.GetLastWin32Error();
+            throw new ApplicationException($"Error: Unable to write changes to assembly file '{settings.TargetAssembly}' using TLB file '{settings.SourceTypeLibrary}'; error code {win32ErrorCode}.");
+        }
+
+        return true;
     }
 }
