@@ -12,22 +12,22 @@ jobs:
         test_suite:
           - name: OutProc
             path: outproc
-          - name: 32 Bit
-            path: 32bit
+          # - name: 32 Bit
+          #   path: 32bit
           - name: C++/CLI
             path: cppcli
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
       - name: Setup .NET (x86)
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
         env:

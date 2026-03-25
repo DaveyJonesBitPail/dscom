@@ -39,6 +39,10 @@
     <DsComTypeLibraryEmbedAfterBuild>false</DsComTypeLibraryEmbedAfterBuild>
     <!-- Do not retry to embed on failure -->
     <DsComEmbedAttemptCount>1</DsComEmbedAttemptCount>
+    <!-- If the file shall be exported, do it for all users only if requested  -->
+    <DsComRegisterTypeLibrariesAfterBuildGlobally>false</DsComRegisterTypeLibrariesAfterBuildGlobally>
+    <!-- Always run DsCom after build -->
+    <DsComRunAfterBuild>true</DsComRunAfterBuild>
   </PropertyGroup>
 
   <!-- Clear properties -->
