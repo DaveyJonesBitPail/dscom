@@ -42,8 +42,8 @@ public static class ConsoleApp
             new Option<bool?>("--createmissingdependenttlbs", "/createmissingdependenttlbs") { Description = "Generate missing type libraries for referenced assemblies. (default true)" },
             new Option<string?>("--embed", "/embed") { DefaultValueFactory =_ =>  TypeLibConverterOptions.NotSpecifiedViaCommandLineArgumentsDefault, Description = "Embeds type library into the assembly. (default: false)", Arity = ArgumentArity.ZeroOrOne },
             new Option<ushort>("--index", "/index") { DefaultValueFactory = _ => 1, Description = "If the switch --embed is specified, the index indicates the resource ID to be used for the embedded type library. Must be a number between 1 and 65535. Ignored if --embed not present. (default 1)" },
-            new Option<int>(new[] {"--retrycount", "/retrycount"}, () => 10, description:"Retry count if embedding fails. If omitted, defaults to 1. Must be a positive integer."),
-            new Option<int>(new[] {"--retrydelay", "/retrydelay"}, () => 1000, description:"Delay in milliseconds between retries if retry count is greater than 1. If omitted, defaults to 1000ms. Must be a positive integer.")
+            new Option<int>("--retrycount", "/retrycount") { DefaultValueFactory = _ => 10, Description ="Retry count if embedding fails. If omitted, defaults to 1. Must be a positive integer."},
+            new Option<int>("--retrydelay", "/retrydelay") { DefaultValueFactory = _ => 1000, Description ="Delay in milliseconds between retries if retry count is greater than 1. If omitted, defaults to 1000ms. Must be a positive integer."}
 
         };
 
@@ -73,8 +73,8 @@ public static class ConsoleApp
             new Argument<string>("SourceTypeLibrary") { Description ="File name of type library" },
             new Argument<string>("TargetAssembly") { Description = "File name of target assembly to receive the type library as a resource" },
             new Option<ushort>("--index", "/index") { DefaultValueFactory = _ =>  1, Description = "Index to use for resource ID for the type library. If omitted, defaults to 1. Must be a positive integer from 1 to 65535." },
-            new Option<int>(new[] {"--retrycount", "/retrycount"}, () => 10, description:"Retry count if embedding fails. If omitted, defaults to 1. Must be a positive integer."),
-            new Option<int>(new[] {"--retrydelay", "/retrydelay"}, () => 1000, description:"Delay in milliseconds between retries if retry count is greater than 1. If omitted, defaults to 1000ms. Must be a positive integer.")
+            new Option<int>("--retrycount", "/retrycount") { DefaultValueFactory = _ => 10, Description ="Retry count if embedding fails. If omitted, defaults to 1. Must be a positive integer."},
+            new Option<int>("--retrydelay", "/retrydelay") { DefaultValueFactory = _ => 1000, Description ="Delay in milliseconds between retries if retry count is greater than 1. If omitted, defaults to 1000ms. Must be a positive integer."}
         };
 
         var registerAssemblyCommand = new Command("regasm", "Register an assembly")
