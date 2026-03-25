@@ -60,6 +60,20 @@ public class TypeLibConverterOptions : TypeLibConverterSettings
     public ushort Index { get; set; }
 
     /// <summary>
+    /// Gets or sets the retry count when embedding
+    /// type library into assembly. Effective only if the <seealso cref="Embed"/>
+    /// is set to <c>true</c>. Defaults to 1;
+    /// </summary>
+    public int RetryCount { get; set; } = 1;
+
+    /// <summary>
+    /// Gets or sets the retry delay in milliseconds when embedding
+    /// type library into assembly. Effective only if the <seealso cref="Embed"/>
+    /// is set to <c>true</c>. Defaults to 1000.
+    /// </summary>
+    public int RetryDelay { get; set; } = 1000;
+
+    /// <summary>
     /// Centralized check for using a meaningful value for <see cref="Embed"/>.
     /// </summary>
     /// <returns><c>true</c>, if the tlb should be embedded into the resulting assembly; <c>false</c> otherwise.</returns>
